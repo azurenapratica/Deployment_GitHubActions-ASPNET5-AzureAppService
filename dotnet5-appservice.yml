@@ -1,0 +1,40 @@
+name: Introducao
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    env:
+      CAMINHO_PROJETO_WEBAPP: ./SiteContagem
+      NOME_WEBAPP_AZURE: groffegithubactions
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup .NET 5
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.100
+
+    - name: Build com o utilitario dotnet
+      run: dotnet build ${{ env.CAMINHO_PROJETO_WEBAPP }} --configuration Release
+
+    - name: Publish com o utilitario dotnet
+      run: dotnet publish ${{ env.CAMINHO_PROJETO_WEBAPP }} -c Release -o app
+
+    - name: Login no Azure
+      uses: Azure/login@v1.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Deployment no Azure App Service
+      uses: Azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.NOME_WEBAPP_AZURE }}
+        package: './app'
